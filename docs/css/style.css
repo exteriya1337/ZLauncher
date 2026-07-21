@@ -1093,9 +1093,7 @@ a.btn-github:active {
     margin-left: 0;
     width: 100%;
   }
-}
 
-@media (max-width: 720px) {
   .window-body {
     grid-template-columns: 1fr;
   }
