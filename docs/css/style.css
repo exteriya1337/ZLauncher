@@ -76,10 +76,25 @@ a.btn-play,
 a.btn-play *,
 a.btn-github,
 a.btn-github *,
+a.inline-link,
 button:not([disabled]),
-button:not([disabled]) * {
+button:not([disabled]) *,
+.site-tab {
   cursor: pointer !important;
   user-select: none;
+}
+
+/* Changelog text can be selected */
+.changelog-page,
+.changelog-page * {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: default;
+}
+
+.changelog-page a,
+.changelog-page button {
+  cursor: pointer !important;
 }
 
 /* Сброс «невидимости» ссылок-кнопок */
@@ -177,9 +192,88 @@ body.is-ready .anim-window {
   transform: translateY(0) translateX(0) scale(1);
 }
 
+/* ── Site nav / tabs ── */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 56px;
+  background: rgba(31, 31, 31, 0.9);
+  border-bottom: 1px solid var(--border-dark);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.site-nav-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.site-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.site-nav-brand img {
+  border-radius: 7px;
+}
+
+.site-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-tab {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.site-tab:hover {
+  color: #ccc;
+  border-color: #555;
+  background: #2a2a2a;
+}
+
+.site-tab.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-active);
+}
+
+.site-panel[hidden] {
+  display: none !important;
+}
+
+.site-panel.is-active {
+  display: block;
+}
+
 /* ── Hero ── */
 .hero {
-  min-height: 100vh;
+  min-height: calc(100vh - 56px);
   display: flex;
   align-items: center;
   padding: 2.5rem 0;
@@ -778,6 +872,173 @@ a.btn-github:active {
   z-index: 1;
 }
 
+/* ── Changelog page ── */
+.changelog-page {
+  padding: 2.5rem 0 4rem;
+  min-height: calc(100vh - 56px);
+}
+
+.changelog-wrap {
+  max-width: 720px;
+}
+
+.changelog-head {
+  margin-bottom: 1.75rem;
+}
+
+.changelog-head h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-bright);
+}
+
+.changelog-sub {
+  margin: 0;
+  color: #a8a8a8;
+  font-size: 14px;
+  max-width: 48ch;
+}
+
+.inline-link {
+  color: var(--accent) !important;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.inline-link:hover {
+  border-bottom-color: var(--accent);
+}
+
+.changelog-status {
+  margin-bottom: 1.25rem;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(34, 34, 34, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.changelog-status.is-error {
+  color: #e8a070;
+  border-color: rgba(230, 126, 34, 0.35);
+}
+
+.changelog-status.is-ok {
+  display: none;
+}
+
+.changelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cl-card {
+  background: rgba(34, 34, 34, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 1.15rem 1.25rem 1.25rem;
+  transition: border-color 0.16s ease;
+}
+
+.cl-card:hover {
+  border-color: rgba(230, 126, 34, 0.55);
+}
+
+.cl-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.cl-tag {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.cl-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.cl-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cl-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-active);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.cl-body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #c4c4c4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cl-body:empty::before {
+  content: "Без описания.";
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.cl-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cl-body strong {
+  color: #eee;
+  font-weight: 600;
+}
+
+.cl-body code {
+  font-size: 0.9em;
+  color: var(--accent);
+  background: var(--bg-hover-warm, #2c241c);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.cl-link {
+  display: inline-block;
+  margin-top: 0.85rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent) !important;
+}
+
+.cl-link:hover {
+  text-decoration: underline;
+}
+
+.changelog-foot {
+  margin: 2rem 0 0;
+  font-size: 13px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 960px) {
   .hero-grid {
@@ -811,6 +1072,26 @@ a.btn-github:active {
 
   .stats {
     justify-content: center;
+  }
+
+  .hero-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-nav-inner {
+    gap: 0.5rem;
+  }
+
+  .site-tab {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .cl-date {
+    margin-left: 0;
+    width: 100%;
   }
 }
 

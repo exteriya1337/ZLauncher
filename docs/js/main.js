@@ -201,8 +201,267 @@ function startEntrance() {
   });
 }
 
+// ── Site tabs: Главная / Changelog ───────────────────────────
+const GH_RELEASES_URL =
+  "https://api.github.com/repos/exteriya1337/ZLauncher/releases?per_page=20";
+const GH_RELEASES_PAGE =
+  "https://github.com/exteriya1337/ZLauncher/releases";
+const LS_CHANGELOG = "zl_changelog_cache_v1";
+const CHANGELOG_TTL_MS = 30 * 60 * 1000; // 30 мин — экономим rate limit
+
+let changelogLoaded = false;
+let changelogLoading = false;
+
+function setActiveTab(tab) {
+  const tabs = document.querySelectorAll(".site-tab");
+  const panels = document.querySelectorAll(".site-panel");
+
+  tabs.forEach((t) => {
+    const on = t.getAttribute("data-tab") === tab;
+    t.classList.toggle("is-active", on);
+    t.setAttribute("aria-selected", on ? "true" : "false");
+  });
+
+  panels.forEach((p) => {
+    const on = p.getAttribute("data-panel") === tab;
+    p.classList.toggle("is-active", on);
+    if (on) p.removeAttribute("hidden");
+    else p.setAttribute("hidden", "");
+  });
+
+  if (tab === "changelog") {
+    loadChangelog();
+    // hash for shareable link
+    if (location.hash !== "#changelog") {
+      history.replaceState(null, "", "#changelog");
+    }
+  } else if (location.hash === "#changelog" || location.hash === "#home") {
+    history.replaceState(null, "", tab === "home" ? "#home" : location.pathname);
+  }
+
+  window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+}
+
+function wireTabs() {
+  document.querySelectorAll("[data-tab]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const tab = el.getAttribute("data-tab");
+      if (tab) setActiveTab(tab);
+    });
+  });
+
+  if (location.hash === "#changelog") {
+    setActiveTab("changelog");
+  }
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Простой markdown → HTML (заголовки, bold, code, ссылки, списки) */
+function simpleMarkdown(md) {
+  if (!md || !md.trim()) return "";
+
+  let text = escapeHtml(md);
+
+  // links [text](url)
+  text = text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
+  // bare urls
+  text = text.replace(
+    /(^|[\s(])(https?:\/\/[^\s<]+)/g,
+    '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>'
+  );
+  // **bold**
+  text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // `code`
+  text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // headings at line start
+  text = text.replace(/^### (.+)$/gm, "<strong>$1</strong>");
+  text = text.replace(/^## (.+)$/gm, "<strong>$1</strong>");
+  text = text.replace(/^# (.+)$/gm, "<strong>$1</strong>");
+  // list bullets
+  text = text.replace(/^[-*] (.+)$/gm, "• $1");
+
+  return text;
+}
+
+function formatReleaseDate(iso) {
+  try {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(d);
+  } catch {
+    return "";
+  }
+}
+
+function renderReleases(releases) {
+  const list = document.getElementById("changelog-list");
+  const status = document.getElementById("changelog-status");
+  if (!list) return;
+
+  if (!releases || releases.length === 0) {
+    if (status) {
+      status.className = "changelog-status";
+      status.textContent = "Релизов пока нет.";
+    }
+    list.innerHTML = "";
+    return;
+  }
+
+  if (status) {
+    status.className = "changelog-status is-ok";
+    status.textContent = "";
+  }
+
+  list.innerHTML = releases
+    .filter((r) => !r.draft)
+    .map((r, i) => {
+      const tag = escapeHtml(r.tag_name || r.name || "release");
+      const name =
+        r.name && r.name !== r.tag_name ? escapeHtml(r.name) : "";
+      const date = formatReleaseDate(r.published_at || r.created_at);
+      const body = simpleMarkdown(r.body || "");
+      const url = escapeHtml(r.html_url || GH_RELEASES_PAGE);
+      const latest =
+        i === 0
+          ? '<span class="cl-badge">latest</span>'
+          : "";
+      const pre = r.prerelease
+        ? '<span class="cl-badge" style="border-color:#666;color:#aaa;background:#2a2a2a">pre</span>'
+        : "";
+
+      return `
+        <article class="cl-card">
+          <div class="cl-card-head">
+            <span class="cl-tag">${tag}</span>
+            ${name ? `<span class="cl-name">${name}</span>` : ""}
+            ${latest}${pre}
+            <span class="cl-date">${date}</span>
+          </div>
+          <div class="cl-body">${body}</div>
+          <a class="cl-link" href="${url}" target="_blank" rel="noopener noreferrer">Открыть на GitHub →</a>
+        </article>`;
+    })
+    .join("");
+}
+
+function readChangelogCache() {
+  try {
+    const raw = localStorage.getItem(LS_CHANGELOG);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.releases) || !data.ts) return null;
+    if (Date.now() - data.ts > CHANGELOG_TTL_MS) return null;
+    return data.releases;
+  } catch {
+    return null;
+  }
+}
+
+function writeChangelogCache(releases) {
+  try {
+    localStorage.setItem(
+      LS_CHANGELOG,
+      JSON.stringify({ ts: Date.now(), releases })
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+async function fetchReleasesFromGitHub() {
+  const res = await fetch(GH_RELEASES_URL, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      // GitHub recommends a UA; browser sends one automatically
+    },
+    cache: "no-cache",
+  });
+
+  if (res.status === 403 || res.status === 429) {
+    const err = new Error("rate_limit");
+    err.status = res.status;
+    throw err;
+  }
+  if (!res.ok) {
+    const err = new Error("http_" + res.status);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+async function loadChangelog() {
+  if (changelogLoading) return;
+  const status = document.getElementById("changelog-status");
+
+  // Кэш
+  const cached = readChangelogCache();
+  if (cached) {
+    renderReleases(cached);
+    changelogLoaded = true;
+    // тихий refresh в фоне
+    refreshChangelogInBackground();
+    return;
+  }
+
+  if (changelogLoaded) return;
+  changelogLoading = true;
+
+  if (status) {
+    status.className = "changelog-status";
+    status.textContent = "Загрузка релизов с GitHub…";
+  }
+
+  try {
+    const releases = await fetchReleasesFromGitHub();
+    writeChangelogCache(releases);
+    renderReleases(releases);
+    changelogLoaded = true;
+  } catch (e) {
+    if (status) {
+      status.className = "changelog-status is-error";
+      if (e && e.message === "rate_limit") {
+        status.innerHTML =
+          "GitHub временно ограничил запросы (лимит API). Попробуй позже или открой " +
+          `<a class="inline-link" href="${GH_RELEASES_PAGE}" target="_blank" rel="noopener noreferrer">релизы на GitHub</a>.`;
+      } else {
+        status.innerHTML =
+          "Не удалось загрузить changelog. " +
+          `<a class="inline-link" href="${GH_RELEASES_PAGE}" target="_blank" rel="noopener noreferrer">Смотреть на GitHub →</a>`;
+      }
+    }
+  } finally {
+    changelogLoading = false;
+  }
+}
+
+async function refreshChangelogInBackground() {
+  try {
+    const releases = await fetchReleasesFromGitHub();
+    writeChangelogCache(releases);
+    renderReleases(releases);
+  } catch {
+    /* keep cache */
+  }
+}
+
 async function boot() {
   wireDownload();
+  wireTabs();
   startEntrance();
 
   const cachedV = readLocal(LS_VISITS, 0);
