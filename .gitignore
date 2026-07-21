@@ -1,0 +1,49 @@
+## Build
+bin/
+obj/
+.tmp/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.DotSettings.user
+
+## Publish / packages
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+publish/
+out/
+
+## Installer payload (generated)
+Installer/payload/payload.zip
+Installer/payload/**
+!Installer/payload/README.txt
+payload/payload.zip
+
+## OS / IDE
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+*.swp
+*~
+
+## Local secrets
+*.pfx
+.env
+.env.*

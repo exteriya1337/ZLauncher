@@ -1,0 +1,115 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ZLauncher.ViewModels"
+        x:Class="ZLauncher.Views.SplashWindow"
+        x:DataType="vm:SplashViewModel"
+        Title="ZLauncher"
+        Icon="/Assets/zlauncher.ico"
+        Width="400"
+        Height="300"
+        CanResize="False"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True"
+        Topmost="True"
+        Win32Properties.WindowCornerPreference="Round">
+
+    <Border Margin="12"
+            Background="Transparent"
+            CornerRadius="10"
+            BoxShadow="0 10 28 0 #55000000, 0 2 8 0 #33000000">
+        <Border Background="#2B2B2B"
+                CornerRadius="8"
+                ClipToBounds="True"
+                BorderBrush="#1A1A1A"
+                BorderThickness="1">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+                <!-- Title -->
+                <Border Background="#1F1F1F"
+                        Height="36"
+                        BorderBrush="#171717"
+                        BorderThickness="0,0,0,1">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="13"
+                               FontWeight="SemiBold">
+                        <Run Text="Z" Foreground="#E67E22" />
+                        <Run Text="Launcher" Foreground="#D0D0D0" />
+                    </TextBlock>
+                </Border>
+
+                <!-- Spinner + status -->
+                <StackPanel Grid.Row="1"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="16"
+                            Margin="24,20,24,12">
+                    <Panel Width="52"
+                           Height="52"
+                           HorizontalAlignment="Center">
+                        <Ellipse Width="52"
+                                 Height="52"
+                                 Stroke="#3A3A3A"
+                                 StrokeThickness="3" />
+                        <Ellipse x:Name="SpinRing"
+                                 Width="52"
+                                 Height="52"
+                                 Stroke="#E67E22"
+                                 StrokeThickness="3"
+                                 StrokeDashArray="40,80"
+                                 StrokeLineCap="Round"
+                                 RenderTransformOrigin="50%,50%">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform Angle="0" />
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Panel>
+
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="#E0E0E0"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="300" />
+
+                    <ProgressBar Minimum="0"
+                                 Maximum="1"
+                                 Value="{Binding Progress}"
+                                 Height="3"
+                                 Width="240"
+                                 Foreground="#E67E22"
+                                 Background="#333333" />
+                </StackPanel>
+
+                <!-- Лог -->
+                <Border Grid.Row="2"
+                        Background="#1F1F1F"
+                        BorderBrush="#171717"
+                        BorderThickness="0,1,0,0"
+                        Padding="14,10"
+                        MinHeight="96"
+                        MaxHeight="110">
+                    <ScrollViewer x:Name="LogScroll"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding LogLines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               FontSize="11"
+                                               Foreground="#888888"
+                                               Margin="0,1"
+                                               TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+    </Border>
+</Window>

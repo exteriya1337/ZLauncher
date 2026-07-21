@@ -1,0 +1,207 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ZLauncher.Installer.ViewModels"
+        x:Class="ZLauncher.Installer.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="ZLauncher — Установка"
+        Width="620"
+        Height="420"
+        MinWidth="520"
+        MinHeight="380"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="#1A1A1A"
+        ExtendClientAreaToDecorationsHint="False">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="#222222"
+                BorderBrush="#2E2E2E"
+                BorderThickness="0,0,0,1"
+                Padding="22,16">
+            <Grid ColumnDefinitions="Auto,*">
+                <Border Width="40" Height="40"
+                        CornerRadius="10"
+                        Background="#2A2A2A"
+                        BorderBrush="#3A3A3A"
+                        BorderThickness="1"
+                        Margin="0,0,14,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="Z"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="#E67E22"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock FontSize="16" FontWeight="SemiBold">
+                        <Run Text="Z" Foreground="#E67E22" />
+                        <Run Text="Launcher" Foreground="#E8E8E8" />
+                        <Run Text=" Setup" Foreground="#888888" />
+                    </TextBlock>
+                    <TextBlock Text="Мастер установки"
+                               FontSize="11"
+                               Foreground="#777777" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <Border Grid.Row="1" Padding="28,22">
+            <Panel>
+
+                <!-- Welcome -->
+                <StackPanel IsVisible="{Binding IsWelcome}" Spacing="14">
+                    <TextBlock Text="{Binding WelcomeTitle}"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#F0F0F0" />
+                    <TextBlock Text="{Binding WelcomeBody}"
+                               FontSize="13"
+                               Foreground="#AAAAAA"
+                               TextWrapping="Wrap"
+                               LineHeight="20" />
+                    <Border Background="#242424"
+                            CornerRadius="8"
+                            Padding="12,10"
+                            Margin="0,8,0,0">
+                        <TextBlock Text="{Binding PayloadStatus}"
+                                   FontSize="11.5"
+                                   Foreground="#999999"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Options -->
+                <StackPanel IsVisible="{Binding IsOptions}" Spacing="16">
+                    <TextBlock Text="Параметры установки"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#F0F0F0" />
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Папка установки"
+                                   FontSize="12"
+                                   Foreground="#888888" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Classes="PathBox"
+                                     Text="{Binding InstallPath}"
+                                     VerticalAlignment="Center" />
+                            <Button Grid.Column="1"
+                                    Classes="Ghost"
+                                    Content="Обзор…"
+                                    Command="{Binding BrowseCommand}"
+                                    MinWidth="90"
+                                    VerticalAlignment="Stretch" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Spacing="10" Margin="0,4,0,0">
+                        <CheckBox Content="Ярлык на рабочем столе"
+                                  IsChecked="{Binding CreateDesktopShortcut}" />
+                        <CheckBox Content="Ярлык в меню Пуск"
+                                  IsChecked="{Binding CreateStartMenuShortcut}" />
+                        <CheckBox Content="Запустить ZLauncher после установки"
+                                  IsChecked="{Binding LaunchAfterInstall}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Installing -->
+                <StackPanel IsVisible="{Binding IsInstalling}"
+                            Spacing="16"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Установка…"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#F0F0F0" />
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="13"
+                               Foreground="#CCCCCC" />
+                    <TextBlock Text="{Binding DetailText}"
+                               FontSize="11.5"
+                               Foreground="#777777"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <ProgressBar Minimum="0"
+                                 Maximum="1"
+                                 Value="{Binding Progress}"
+                                 Height="8"
+                                 Margin="0,6,0,0"
+                                 Foreground="#E67E22"
+                                 Background="#2A2A2A" />
+
+                    <TextBlock Text="{Binding Progress, StringFormat={}{0:P0}}"
+                               FontSize="12"
+                               Foreground="#E67E22"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+
+                <!-- Finished -->
+                <StackPanel IsVisible="{Binding IsFinished}"
+                            Spacing="12"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Готово!"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="#2ECC71" />
+                    <TextBlock Text="ZLauncher успешно установлен."
+                               FontSize="13"
+                               Foreground="#CCCCCC" />
+                    <TextBlock Text="{Binding DetailText}"
+                               FontSize="11.5"
+                               Foreground="#777777"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- Error -->
+                <StackPanel IsVisible="{Binding IsError}"
+                            Spacing="12"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Ошибка"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#E74C3C" />
+                    <TextBlock Text="{Binding ErrorText}"
+                               FontSize="13"
+                               Foreground="#CCCCCC"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Panel>
+        </Border>
+
+        <!-- Footer buttons -->
+        <Border Grid.Row="2"
+                Background="#1F1F1F"
+                BorderBrush="#2E2E2E"
+                BorderThickness="0,1,0,0"
+                Padding="22,14">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <Button Classes="Ghost"
+                        Content="Отмена"
+                        Command="{Binding CancelCommand}"
+                        IsVisible="{Binding ShowCancel}" />
+
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            HorizontalAlignment="Right">
+                    <Button Classes="Ghost"
+                            Content="Назад"
+                            Command="{Binding BackCommand}"
+                            IsVisible="{Binding ShowBack}" />
+                    <Button Classes="Primary"
+                            Content="{Binding PrimaryButtonText}"
+                            Command="{Binding PrimaryCommand}"
+                            IsVisible="{Binding ShowPrimary}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

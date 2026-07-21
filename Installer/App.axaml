@@ -1,0 +1,71 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ZLauncher.Installer.App"
+             xmlns:local="using:ZLauncher.Installer"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <Style Selector="Button.Primary">
+            <Setter Property="Background" Value="#E67E22" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="18,9" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="MinWidth" Value="110" />
+        </Style>
+        <Style Selector="Button.Primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F39C12" />
+        </Style>
+        <Style Selector="Button.Primary:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#D35400" />
+        </Style>
+        <Style Selector="Button.Primary:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4A4A4A" />
+            <Setter Property="Foreground" Value="#888888" />
+        </Style>
+
+        <Style Selector="Button.Ghost">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#AAAAAA" />
+            <Setter Property="BorderBrush" Value="#3A3A3A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="MinWidth" Value="100" />
+        </Style>
+        <Style Selector="Button.Ghost:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="BorderBrush" Value="#E67E22" />
+            <Setter Property="Foreground" Value="#E0E0E0" />
+        </Style>
+
+        <Style Selector="TextBox.PathBox">
+            <Setter Property="Background" Value="#1A1A1A" />
+            <Setter Property="Foreground" Value="#E0E0E0" />
+            <Setter Property="BorderBrush" Value="#3A3A3A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
+        <Style Selector="TextBox.PathBox:focus">
+            <Setter Property="BorderBrush" Value="#E67E22" />
+        </Style>
+
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+    </Application.Styles>
+</Application>
