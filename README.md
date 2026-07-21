@@ -1,37 +1,37 @@
-# ZLauncher
+﻿# ZLauncher
 
-Minecraft-лаунчер (Avalonia) + установщик + сайт.
+Minecraft-Р»Р°СѓРЅС‡РµСЂ (Avalonia) + СѓСЃС‚Р°РЅРѕРІС‰РёРє + СЃР°Р№С‚.
 
-**Не связан с Mojang Studios / Microsoft.** Minecraft — товарный знак Mojang Synergies AB.
+**РќРµ СЃРІСЏР·Р°РЅ СЃ Mojang Studios / Microsoft.** Minecraft вЂ” С‚РѕРІР°СЂРЅС‹Р№ Р·РЅР°Рє Mojang Synergies AB.
 
-## Репозиторий
+## Р РµРїРѕР·РёС‚РѕСЂРёР№
 
-| Путь | Содержимое |
+| РџСѓС‚СЊ | РЎРѕРґРµСЂР¶РёРјРѕРµ |
 |------|------------|
-| `/` | Лаунчер `ZLauncher` |
-| `Installer/` | Установщик `ZLauncher.Setup` |
-| `site/` | Лендинг (GitHub Pages) |
-| `.github/workflows/release.yml` | Сборка portable + setup в Release |
+| `/` | Р›Р°СѓРЅС‡РµСЂ `ZLauncher` |
+| `Installer/` | РЈСЃС‚Р°РЅРѕРІС‰РёРє `ZLauncher.Setup` |
+| `docs/` | Р›РµРЅРґРёРЅРі (GitHub Pages) |
+| `.github/workflows/release.yml` | РЎР±РѕСЂРєР° portable + setup РІ Release |
 
 - **Owner / repo:** `exteriya1337/ZLauncher`
-- **Релизы:** https://github.com/exteriya1337/ZLauncher/releases
-- **Сайт (Pages):** включи в Settings → Pages → branch `main` / folder `/site`
+- **Р РµР»РёР·С‹:** https://github.com/exteriya1337/ZLauncher/releases
+- **РЎР°Р№С‚ (Pages):** РІРєР»СЋС‡Рё РІ Settings в†’ Pages в†’ branch `main` / folder `/docs`
 
-## Версия
+## Р’РµСЂСЃРёСЏ
 
-Единая версия: `Directory.Build.props` + `Services/AppInfo.cs` (`Version = "1.0.0"`).
+Р•РґРёРЅР°СЏ РІРµСЂСЃРёСЏ: `Directory.Build.props` + `Services/AppInfo.cs` (`Version = "1.0.0"`).
 
-При релизе:
+РџСЂРё СЂРµР»РёР·Рµ:
 
-1. Обнови `Version` в `AppInfo.cs` (лаунчер) и `Installer/Services/AppInfo.cs`
-2. Обнови `Directory.Build.props`
-3. Тег: `git tag v1.0.1 && git push origin v1.0.1`
-4. CI соберёт `ZLauncher-Portable.zip` и `ZLauncher.Setup.exe`
+1. РћР±РЅРѕРІРё `Version` РІ `AppInfo.cs` (Р»Р°СѓРЅС‡РµСЂ) Рё `Installer/Services/AppInfo.cs`
+2. РћР±РЅРѕРІРё `Directory.Build.props`
+3. РўРµРі: `git tag v1.0.1 && git push origin v1.0.1`
+4. CI СЃРѕР±РµСЂС‘С‚ `ZLauncher-Portable.zip` Рё `ZLauncher.Setup.exe`
 
-## Локальная сборка
+## Р›РѕРєР°Р»СЊРЅР°СЏ СЃР±РѕСЂРєР°
 
 ```powershell
-# Лаунчер
+# Р›Р°СѓРЅС‡РµСЂ
 dotnet build ZLauncher.csproj -c Release
 
 # Portable
@@ -44,21 +44,22 @@ dotnet publish .\Installer\ZLauncher.Installer.csproj -c Release -r win-x64 --se
   /p:PublishSingleFile=true -o .\publish\setup
 ```
 
-Или: `Installer\tools\Publish-Setup.ps1` (если рядом есть `Desktop\ZLauncher-Portable`).
+РР»Рё: `Installer\tools\Publish-Setup.ps1` (РµСЃР»Рё СЂСЏРґРѕРј РµСЃС‚СЊ `Desktop\ZLauncher-Portable`).
 
-## Обновления
+## РћР±РЅРѕРІР»РµРЅРёСЏ
 
-При старте лаунчер дергает GitHub API `releases/latest` и сравнивает с `AppInfo.Version`.  
-Если есть новее — статус «Доступно обновление…»; команда `ApplyLauncherUpdate` качает `ZLauncher.Setup.exe` и запускает.
+РџСЂРё СЃС‚Р°СЂС‚Рµ Р»Р°СѓРЅС‡РµСЂ РґРµСЂРіР°РµС‚ GitHub API `releases/latest` Рё СЃСЂР°РІРЅРёРІР°РµС‚ СЃ `AppInfo.Version`.  
+Р•СЃР»Рё РµСЃС‚СЊ РЅРѕРІРµРµ вЂ” СЃС‚Р°С‚СѓСЃ В«Р”РѕСЃС‚СѓРїРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµвЂ¦В»; РєРѕРјР°РЅРґР° `ApplyLauncherUpdate` РєР°С‡Р°РµС‚ `ZLauncher.Setup.exe` Рё Р·Р°РїСѓСЃРєР°РµС‚.
 
-## Кастомные версии
+## РљР°СЃС‚РѕРјРЅС‹Рµ РІРµСЂСЃРёРё
 
-Положи папку с profile `.json` (+ jar) в:
+РџРѕР»РѕР¶Рё РїР°РїРєСѓ СЃ profile `.json` (+ jar) РІ:
 
 `%AppData%\ZLauncher\versions\MyClient\`
 
-Она появится в списке версий (тип **custom**), сверху. Debug-консоль — **3× клик** по «ZLauncher» в titlebar (без подсказки).
+РћРЅР° РїРѕСЏРІРёС‚СЃСЏ РІ СЃРїРёСЃРєРµ РІРµСЂСЃРёР№ (С‚РёРї **custom**), СЃРІРµСЂС…Сѓ. Debug-РєРѕРЅСЃРѕР»СЊ вЂ” **3Г— РєР»РёРє** РїРѕ В«ZLauncherВ» РІ titlebar (Р±РµР· РїРѕРґСЃРєР°Р·РєРё).
 
-## Лицензия / дисклеймер
+## Р›РёС†РµРЅР·РёСЏ / РґРёСЃРєР»РµР№РјРµСЂ
 
-Неофициальный клиент. Не аффилирован с Mojang / Microsoft.
+РќРµРѕС„РёС†РёР°Р»СЊРЅС‹Р№ РєР»РёРµРЅС‚. РќРµ Р°С„С„РёР»РёСЂРѕРІР°РЅ СЃ Mojang / Microsoft.
+
