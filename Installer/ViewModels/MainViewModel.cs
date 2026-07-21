@@ -90,7 +90,9 @@ public partial class MainViewModel : ViewModelBase
     public string WelcomeTitle => "Установка ZLauncher";
     public string WelcomeBody =>
         "Добро пожаловать в мастер установки ZLauncher — лаунчера Minecraft.\n\n" +
-        "Будут скопированы файлы приложения, созданы ярлыки и запись для удаления.";
+        "Этот установщик всегда скачивает последнюю версию с GitHub, " +
+        "создаёт ярлыки и запись для удаления.\n\n" +
+        "Нужен интернет.";
 
     /// <summary>Выбор папки — окно подписывается и показывает picker.</summary>
     public event EventHandler? RequestBrowseFolder;
@@ -103,18 +105,13 @@ public partial class MainViewModel : ViewModelBase
 
     public void RefreshPayload()
     {
+        // Онлайн-режим — основной; локальный payload только fallback для dev
         _payloadSource = PayloadLocator.Find();
-        PayloadStatus = _payloadSource.Kind switch
-        {
-            PayloadLocator.PayloadKind.EmbeddedZip =>
-                "Пакет лаунчера: встроен в установщик (один файл)",
-            PayloadLocator.PayloadKind.ZipFile =>
-                $"Пакет: {_payloadSource.Description}",
-            PayloadLocator.PayloadKind.Directory =>
-                $"Папка: {_payloadSource.Description}",
-            _ =>
-                "⚠ Пакет не найден. Запусти tools\\Pack-Payload.ps1 (создаст payload\\payload.zip)"
-        };
+        PayloadStatus = "Режим: всегда последняя версия с GitHub (releases/latest)\n" +
+                        "Ассет: ZLauncher-Portable.zip\n" +
+                        (_payloadSource.Kind != PayloadLocator.PayloadKind.None
+                            ? $"Офлайн-запас: {_payloadSource.Description}"
+                            : "Офлайн-запас: нет (нужен интернет)");
     }
 
     [RelayCommand]
@@ -170,16 +167,6 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task StartInstallAsync()
     {
-        RefreshPayload();
-        if (_payloadSource.Kind == PayloadLocator.PayloadKind.None)
-        {
-            ErrorText = "Не найден пакет лаунчера.\n" +
-                        "Собери payload.zip: tools\\Pack-Payload.ps1\n" +
-                        "или положи ZLauncher-Portable на рабочий стол.";
-            Step = InstallerStep.Error;
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(InstallPath))
         {
             ErrorText = "Укажи папку установки.";
@@ -194,7 +181,7 @@ public partial class MainViewModel : ViewModelBase
 
         Step = InstallerStep.Installing;
         Progress = 0;
-        StatusText = "Начало установки…";
+        StatusText = "Скачивание последней версии…";
         DetailText = "";
         ErrorText = "";
 
@@ -223,7 +210,51 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
-            await _engine.InstallAsync(_payloadSource, options, progress, token)
+            // 1) Онлайн: всегда latest Portable с GitHub
+            PayloadLocator.PayloadSource source;
+            try
+            {
+                var gh = new GitHubPackageService();
+                var dlProgress = new Progress<(double Progress, string Status)>(x =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        Progress = Math.Clamp(x.Progress * 0.85, 0, 0.85);
+                        StatusText = x.Status;
+                    });
+                });
+                var (zipPath, version, _) = await gh
+                    .DownloadLatestPortableAsync(dlProgress, token)
+                    .ConfigureAwait(true);
+
+                source = new PayloadLocator.PayloadSource(
+                    PayloadLocator.PayloadKind.ZipFile,
+                    zipPath,
+                    $"GitHub v{version}");
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusText = $"Установка v{version}…";
+                    DetailText = zipPath;
+                });
+            }
+            catch (Exception onlineEx)
+            {
+                // 2) Fallback: встроенный / локальный payload (dev)
+                RefreshPayload();
+                if (_payloadSource.Kind == PayloadLocator.PayloadKind.None)
+                    throw new InvalidOperationException(
+                        "Не удалось скачать лаунчер с GitHub и нет офлайн-пакета.\n\n" +
+                        onlineEx.Message);
+
+                source = _payloadSource;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusText = "GitHub недоступен — офлайн-пакет…";
+                    DetailText = onlineEx.Message;
+                });
+            }
+
+            await _engine.InstallAsync(source, options, progress, token)
                 .ConfigureAwait(true);
 
             token.ThrowIfCancellationRequested();

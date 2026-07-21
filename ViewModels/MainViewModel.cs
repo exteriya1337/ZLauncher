@@ -3432,32 +3432,46 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        var url = info.SetupDownloadUrl;
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            LauncherUpdateService.OpenReleasesPage(info.ReleaseUrl);
-            return;
-        }
-
         try
         {
             IsInstalling = true;
             DownloadStage = "Обновление лаунчера";
             InstallProgress = 0;
-            UpdateStatusText = "Скачивание обновления…";
+            UpdateStatusText = "Принудительное обновление…";
 
-            var prog = new Progress<double>(p =>
+            if (!string.IsNullOrWhiteSpace(info.PortableDownloadUrl))
+            {
+                var prog = new Progress<(double Progress, string Status)>(x =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        InstallProgress = x.Progress;
+                        UpdateStatusText = x.Status;
+                    });
+                });
+                // Exit внутри при успехе
+                await _updates
+                    .ApplyPortableUpdateAndRestartAsync(info.PortableDownloadUrl, prog)
+                    .ConfigureAwait(true);
+                return;
+            }
+
+            var setupUrl = info.SetupDownloadUrl;
+            if (string.IsNullOrWhiteSpace(setupUrl))
+            {
+                LauncherUpdateService.OpenReleasesPage(info.ReleaseUrl);
+                return;
+            }
+
+            var p2 = new Progress<double>(p =>
             {
                 Dispatcher.UIThread.Post(() =>
                 {
                     InstallProgress = p;
-                    UpdateStatusText = $"Скачивание обновления… {(int)(p * 100)}%";
+                    UpdateStatusText = $"Скачивание Setup… {(int)(p * 100)}%";
                 });
             });
-
-            await _updates.DownloadAndRunSetupAsync(url, prog).ConfigureAwait(true);
-            UpdateStatusText = "Запуск установщика…";
-            // Setup подхватит замену файлов — закрываем лаунчер
+            await _updates.DownloadAndRunSetupAsync(setupUrl, p2).ConfigureAwait(true);
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desk)
             {

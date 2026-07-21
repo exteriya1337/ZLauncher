@@ -1,8 +1,8 @@
-# Publish-Setup.ps1 — build portable (optional) + pack + single-file Setup
+# Publish online Setup stub (always downloads latest Portable from GitHub).
+# Does NOT embed payload — file stays relatively small.
 param(
     [string]$OutDir = "",
-    [string]$PortableDir = "",
-    [switch]$SkipPublishLauncher
+    [switch]$WithOfflinePayload
 )
 
 $ErrorActionPreference = "Stop"
@@ -10,32 +10,32 @@ $installerRoot = Split-Path -Parent $PSScriptRoot
 $repoRoot = Split-Path -Parent $installerRoot
 
 if (-not $OutDir) {
-    $OutDir = Join-Path ([Environment]::GetFolderPath("Desktop")) "ZLauncher-Setup"
+    $OutDir = Join-Path $repoRoot "publish\setup-online"
 }
 
-if (-not $SkipPublishLauncher -and -not $PortableDir) {
-    Write-Host "=== 0) Publish portable launcher ==="
-    $PortableDir = Join-Path $repoRoot "publish\portable"
-    if (Test-Path $PortableDir) { Remove-Item $PortableDir -Recurse -Force }
-    New-Item -ItemType Directory -Path $PortableDir | Out-Null
-    dotnet publish (Join-Path $repoRoot "ZLauncher.csproj") `
-        -c Release -r win-x64 --self-contained true -o $PortableDir `
-        /p:DebugType=None /p:DebugSymbols=false --nologo
+if ($WithOfflinePayload) {
+    Write-Host "=== Pack offline payload (optional) ==="
+    & (Join-Path $PSScriptRoot "Pack-Payload.ps1")
+} else {
+    # Ensure no huge embedded zip in online stub
+    $payloadZip = Join-Path $installerRoot "payload\payload.zip"
+    if (Test-Path $payloadZip) {
+        Write-Host "Removing payload.zip so Setup stays online-only stub..."
+        Remove-Item $payloadZip -Force
+    }
 }
 
-Write-Host "=== 1) Pack payload.zip ==="
-& (Join-Path $PSScriptRoot "Pack-Payload.ps1") -PortableDir $PortableDir
-
-Write-Host "=== 2) Publish single-file Setup ==="
+Write-Host "=== Publish single-file online Setup ==="
 if (Test-Path $OutDir) { Remove-Item $OutDir -Recurse -Force }
 New-Item -ItemType Directory -Path $OutDir | Out-Null
 
-$pub = Join-Path $env:TEMP ("zlauncher_setup_pub_" + [guid]::NewGuid().ToString("N"))
+$pub = Join-Path $env:TEMP ("zlauncher_setup_online_" + [guid]::NewGuid().ToString("N"))
 dotnet publish (Join-Path $installerRoot "ZLauncher.Installer.csproj") `
     -c Release -r win-x64 --self-contained true -o $pub `
     /p:PublishSingleFile=true `
     /p:IncludeNativeLibrariesForSelfExtract=true `
     /p:EnableCompressionInSingleFile=true `
+    /p:IncludeAllContentForSelfExtract=true `
     /p:DebugType=None /p:DebugSymbols=false --nologo
 
 $exeName = "ZLauncher.Setup.exe"
@@ -45,15 +45,7 @@ if (-not (Test-Path $srcExe)) { Write-Error "Publish failed: $srcExe" }
 Copy-Item $srcExe (Join-Path $OutDir $exeName) -Force
 Remove-Item $pub -Recurse -Force -ErrorAction SilentlyContinue
 
-@"
-ZLauncher Setup
-===============
-Run: ZLauncher.Setup.exe
-
-Source: https://github.com/exteriya1337/ZLauncher
-Default path: %LocalAppData%\Programs\ZLauncher
-"@ | Set-Content (Join-Path $OutDir "README.txt") -Encoding UTF8
-
 $mb = [math]::Round((Get-Item (Join-Path $OutDir $exeName)).Length / 1MB, 1)
 Write-Host ""
-Write-Host "Done:  $OutDir\$exeName  ($mb MB)"
+Write-Host "Online Setup: $OutDir\$exeName  ($mb MB)"
+Write-Host "This stub downloads ZLauncher-Portable.zip from GitHub releases/latest"

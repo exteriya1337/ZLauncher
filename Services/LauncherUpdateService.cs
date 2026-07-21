@@ -1,9 +1,11 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +26,7 @@ public sealed class UpdateCheckResult
 }
 
 /// <summary>
-/// Проверка обновлений через GitHub Releases API.
+/// Проверка и принудительная установка обновлений через GitHub Releases.
 /// </summary>
 public sealed class LauncherUpdateService
 {
@@ -32,7 +34,7 @@ public sealed class LauncherUpdateService
 
     private static HttpClient CreateClient()
     {
-        var c = new HttpClient { Timeout = TimeSpan.FromSeconds(25) };
+        var c = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
         c.DefaultRequestHeaders.UserAgent.ParseAdd($"{AppInfo.ProductName}/{AppInfo.Version}");
         c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         return c;
@@ -49,8 +51,7 @@ public sealed class LauncherUpdateService
                 return new UpdateCheckResult
                 {
                     UpdateAvailable = false,
-                    CurrentVersion = current,
-                    Error = null
+                    CurrentVersion = current
                 };
             }
 
@@ -88,11 +89,9 @@ public sealed class LauncherUpdateService
                 }
             }
 
-            var available = IsNewer(latest, current);
-
             return new UpdateCheckResult
             {
-                UpdateAvailable = available,
+                UpdateAvailable = IsNewer(latest, current),
                 CurrentVersion = current,
                 LatestVersion = latest,
                 ReleaseName = name,
@@ -114,8 +113,80 @@ public sealed class LauncherUpdateService
     }
 
     /// <summary>
-    /// Скачивает установщик обновления и запускает его, затем завершает текущий процесс.
+    /// Скачивает Portable.zip, готовит bat-скрипт замены файлов и перезапуска, завершает процесс.
+    /// Не возвращает управление при успехе (Environment.Exit).
     /// </summary>
+    public async Task ApplyPortableUpdateAndRestartAsync(
+        string portableDownloadUrl,
+        IProgress<(double Progress, string Status)>? progress = null,
+        CancellationToken ct = default)
+    {
+        var installDir = AppContext.BaseDirectory.TrimEnd(
+            Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var work = Path.Combine(Path.GetTempPath(), "ZLauncher-ForceUpdate-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(work);
+
+        var zipPath = Path.Combine(work, AppInfo.PortableAssetName);
+        var extractDir = Path.Combine(work, "extract");
+        Directory.CreateDirectory(extractDir);
+
+        progress?.Report((0.05, "Скачивание обновления…"));
+        await DownloadFileAsync(portableDownloadUrl, zipPath, p =>
+        {
+            progress?.Report((0.05 + p * 0.7, $"Скачивание… {(int)(p * 100)}%"));
+        }, ct).ConfigureAwait(false);
+
+        progress?.Report((0.78, "Распаковка…"));
+        ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: true);
+
+        // Если zip содержит одну корневую папку — поднимем файлы
+        extractDir = UnwrapSingleRoot(extractDir);
+
+        var exeName = "ZLauncher.exe";
+        if (!File.Exists(Path.Combine(extractDir, exeName)))
+            throw new InvalidOperationException("В архиве обновления нет ZLauncher.exe.");
+
+        progress?.Report((0.9, "Подготовка перезапуска…"));
+
+        var batPath = Path.Combine(work, "apply-update.cmd");
+        var pid = Environment.ProcessId;
+        // cmd: wait for process, robocopy, start launcher
+        var sb = new StringBuilder();
+        sb.AppendLine("@echo off");
+        sb.AppendLine("setlocal");
+        sb.AppendLine($"set \"SRC={extractDir}\"");
+        sb.AppendLine($"set \"DST={installDir}\"");
+        sb.AppendLine($"set \"EXE={Path.Combine(installDir, exeName)}\"");
+        sb.AppendLine($":wait");
+        sb.AppendLine($"tasklist /FI \"PID eq {pid}\" 2>NUL | find \"{pid}\" >NUL");
+        sb.AppendLine("if not errorlevel 1 (");
+        sb.AppendLine("  timeout /t 1 /nobreak >NUL");
+        sb.AppendLine("  goto wait");
+        sb.AppendLine(")");
+        sb.AppendLine("timeout /t 1 /nobreak >NUL");
+        sb.AppendLine("robocopy \"%SRC%\" \"%DST%\" /E /IS /IT /R:2 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np >NUL");
+        sb.AppendLine("start \"\" \"%EXE%\"");
+        sb.AppendLine($"rd /s /q \"{work}\" 2>NUL");
+        sb.AppendLine("endlocal");
+        await File.WriteAllTextAsync(batPath, sb.ToString(), ct).ConfigureAwait(false);
+
+        progress?.Report((0.98, "Перезапуск…"));
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = batPath,
+            UseShellExecute = true,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            WorkingDirectory = work
+        });
+
+        // Дать bat стартовать
+        await Task.Delay(400, CancellationToken.None).ConfigureAwait(false);
+        Environment.Exit(0);
+    }
+
+    /// <summary>Скачать Setup-stub (онлайн) и запустить — для ручного обновления.</summary>
     public async Task DownloadAndRunSetupAsync(
         string downloadUrl,
         IProgress<double>? progress = null,
@@ -125,32 +196,54 @@ public sealed class LauncherUpdateService
         Directory.CreateDirectory(tempDir);
         var target = Path.Combine(tempDir, AppInfo.SetupAssetName);
 
-        await using (var fs = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None))
-        await using (var net = await Http.GetStreamAsync(downloadUrl, ct).ConfigureAwait(false))
-        {
-            var buffer = new byte[81920];
-            long total = -1;
-            // try get length from HEAD-less stream — often unknown
-            long read = 0;
-            int n;
-            while ((n = await net.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false)) > 0)
-            {
-                await fs.WriteAsync(buffer.AsMemory(0, n), ct).ConfigureAwait(false);
-                read += n;
-                if (total > 0)
-                    progress?.Report(Math.Clamp(read / (double)total, 0, 1));
-                else
-                    progress?.Report(0);
-            }
-        }
-
-        progress?.Report(1);
+        await DownloadFileAsync(downloadUrl, target, p => progress?.Report(p), ct).ConfigureAwait(false);
 
         Process.Start(new ProcessStartInfo
         {
             FileName = target,
             UseShellExecute = true
         });
+    }
+
+    private static async Task DownloadFileAsync(
+        string url,
+        string target,
+        Action<double>? progress,
+        CancellationToken ct)
+    {
+        using var resp = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct)
+            .ConfigureAwait(false);
+        resp.EnsureSuccessStatusCode();
+        var total = resp.Content.Headers.ContentLength ?? -1L;
+        await using var net = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        await using var fs = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None, 128 * 1024, true);
+
+        var buffer = new byte[128 * 1024];
+        long read = 0;
+        int n;
+        while ((n = await net.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false)) > 0)
+        {
+            await fs.WriteAsync(buffer.AsMemory(0, n), ct).ConfigureAwait(false);
+            read += n;
+            if (total > 0)
+                progress?.Invoke(Math.Clamp(read / (double)total, 0, 1));
+            else
+                progress?.Invoke(0);
+        }
+
+        progress?.Invoke(1);
+    }
+
+    private static string UnwrapSingleRoot(string extractDir)
+    {
+        var entries = Directory.GetFileSystemEntries(extractDir);
+        if (entries.Length == 1 && Directory.Exists(entries[0]))
+        {
+            if (File.Exists(Path.Combine(entries[0], "ZLauncher.exe")))
+                return entries[0];
+        }
+
+        return extractDir;
     }
 
     public static void OpenReleasesPage(string? url = null)
@@ -164,13 +257,11 @@ public sealed class LauncherUpdateService
         var s = (tag ?? "").Trim();
         if (s.StartsWith("v", StringComparison.OrdinalIgnoreCase))
             s = s[1..];
-        // strip pre-release suffix for comparison base if needed
         var plus = s.IndexOf('+');
         if (plus >= 0) s = s[..plus];
         return s;
     }
 
-    /// <summary>true if remote &gt; local.</summary>
     public static bool IsNewer(string remote, string local)
     {
         if (string.IsNullOrWhiteSpace(remote)) return false;

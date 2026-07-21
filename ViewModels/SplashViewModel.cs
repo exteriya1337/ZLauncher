@@ -39,55 +39,53 @@ public partial class SplashViewModel : ViewModelBase
             await StepAsync(0.04, "Инициализация…", cancellationToken).ConfigureAwait(true);
             await Task.Delay(120, cancellationToken).ConfigureAwait(true);
 
+            // ── 0. Принудительное обновление (до UI) ─────────────
+            await StepAsync(0.08, "Проверка обновлений…", cancellationToken).ConfigureAwait(true);
+            await ForceUpdateIfNeededAsync(
+                msg => Dispatcher.UIThread.Post(() => AppendLog(msg)),
+                p => Dispatcher.UIThread.Post(() =>
+                {
+                    StatusText = p.Status;
+                    Progress = Math.Clamp(0.08 + p.Progress * 0.25, 0.08, 0.32);
+                }),
+                cancellationToken).ConfigureAwait(true);
+
             // ── 1. Настройки / VM ─────────────────────────────────
-            await StepAsync(0.12, "Загрузка настроек…", cancellationToken).ConfigureAwait(true);
+            await StepAsync(0.34, "Загрузка настроек…", cancellationToken).ConfigureAwait(true);
             var vm = await Dispatcher.UIThread.InvokeAsync(() => new MainViewModel(deferInit: true));
             await vm.InitializeCoreAsync(
                 msg => Dispatcher.UIThread.Post(() => AppendLog(msg)),
                 cancellationToken).ConfigureAwait(true);
-            await StepAsync(0.22, "Настройки готовы", cancellationToken).ConfigureAwait(true);
+            await StepAsync(0.38, "Настройки готовы", cancellationToken).ConfigureAwait(true);
 
             // ── 2. Каталоги игры ──────────────────────────────────
-            await StepAsync(0.28, "Проверка каталогов…", cancellationToken).ConfigureAwait(true);
+            await StepAsync(0.42, "Проверка каталогов…", cancellationToken).ConfigureAwait(true);
             await EnsureGameFoldersAsync(msg => Dispatcher.UIThread.Post(() => AppendLog(msg)), cancellationToken)
                 .ConfigureAwait(true);
 
             // ── 3. Java (лёгкая проверка, без полной загрузки) ────
-            await StepAsync(0.38, "Проверка Java…", cancellationToken).ConfigureAwait(true);
+            await StepAsync(0.48, "Проверка Java…", cancellationToken).ConfigureAwait(true);
             await ProbeJavaAsync(msg => Dispatcher.UIThread.Post(() => AppendLog(msg)), cancellationToken)
                 .ConfigureAwait(true);
 
             // ── 4. Версии Minecraft ───────────────────────────────
-            await StepAsync(0.48, "Загрузка списка версий…", cancellationToken).ConfigureAwait(true);
+            await StepAsync(0.56, "Загрузка списка версий…", cancellationToken).ConfigureAwait(true);
             await vm.InitializeVersionsAsync(
                 msg => Dispatcher.UIThread.Post(() => AppendLog(msg)),
                 cancellationToken).ConfigureAwait(true);
 
-            await StepAsync(0.62, "Установленные сборки…", cancellationToken).ConfigureAwait(true);
+            await StepAsync(0.68, "Установленные сборки…", cancellationToken).ConfigureAwait(true);
             await CountInstalledAsync(vm, msg => Dispatcher.UIThread.Post(() => AppendLog(msg)), cancellationToken)
                 .ConfigureAwait(true);
 
-            // ── 5. Обновления лаунчера (GitHub, не блокируем при ошибке) ─
-            await StepAsync(0.68, "Проверка обновлений…", cancellationToken).ConfigureAwait(true);
-            try
-            {
-                await vm.CheckForUpdatesAsync(
-                    msg => Dispatcher.UIThread.Post(() => AppendLog(msg)),
-                    cancellationToken).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                AppendLog("Обновления: " + ex.Message);
-            }
-
-            // ── 6. Скин / UI-данные ───────────────────────────────
-            await StepAsync(0.76, "Подготовка интерфейса…", cancellationToken).ConfigureAwait(true);
+            // ── 5. Скин / UI-данные ───────────────────────────────
+            await StepAsync(0.78, "Подготовка интерфейса…", cancellationToken).ConfigureAwait(true);
             await vm.InitializeUiAsync(
                 msg => Dispatcher.UIThread.Post(() => AppendLog(msg)),
                 cancellationToken).ConfigureAwait(true);
 
-            // ── 7. Прогрев окна (XAML, layout, стили) ─────────────
-            await StepAsync(0.86, "Сборка окна лаунчера…", cancellationToken).ConfigureAwait(true);
+            // ── 6. Прогрев окна (XAML, layout, стили) ─────────────
+            await StepAsync(0.88, "Сборка окна лаунчера…", cancellationToken).ConfigureAwait(true);
             if (WarmMainWindowAsync is not null)
             {
                 var warmLog = new Progress<string>(msg =>
@@ -249,6 +247,64 @@ public partial class SplashViewModel : ViewModelBase
                 });
         }
         catch { return 0; }
+    }
+
+    /// <summary>
+    /// Если на GitHub версия новее — скачиваем Portable и перезапускаемся.
+    /// Без сети / без релиза — продолжаем (не блокируем офлайн).
+    /// </summary>
+    private static async Task ForceUpdateIfNeededAsync(
+        Action<string> log,
+        Action<(double Progress, string Status)> ui,
+        CancellationToken ct)
+    {
+        var updates = new LauncherUpdateService();
+        log($"Версия лаунчера: {AppInfo.Version}");
+        ui((0, "Запрос GitHub releases/latest…"));
+
+        var check = await updates.CheckAsync(ct).ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(check.Error))
+        {
+            log("Обновления: " + check.Error + " (продолжаем)");
+            return;
+        }
+
+        if (!check.UpdateAvailable)
+        {
+            log(string.IsNullOrEmpty(check.LatestVersion)
+                ? "Обновлений нет"
+                : $"Актуальная версия (v{check.LatestVersion})");
+            return;
+        }
+
+        log($"Найдена v{check.LatestVersion} — принудительное обновление");
+        ui((0.05, $"Обновление до v{check.LatestVersion}…"));
+
+        var url = check.PortableDownloadUrl;
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            // Setup теперь stub — предпочитаем portable; иначе setup
+            url = check.SetupDownloadUrl;
+            if (string.IsNullOrWhiteSpace(url))
+                throw new InvalidOperationException(
+                    $"Доступна v{check.LatestVersion}, но нет файла обновления в релизе.");
+
+            log("Portable нет — запуск Setup…");
+            var setupProg = new Progress<double>(p => ui((p, "Скачивание Setup…")));
+            await updates.DownloadAndRunSetupAsync(url, setupProg, ct)
+                .ConfigureAwait(false);
+            Environment.Exit(0);
+            return;
+        }
+
+        var prog = new Progress<(double Progress, string Status)>(x =>
+        {
+            ui(x);
+            log(x.Status);
+        });
+
+        // Не возвращается при успехе (Exit)
+        await updates.ApplyPortableUpdateAndRestartAsync(url, prog, ct).ConfigureAwait(false);
     }
 
     private async Task StepAsync(double progress, string status, CancellationToken ct)

@@ -24,17 +24,14 @@
 - Обычные аккаунты (офлайн-ник)
 - Проверка обновлений лаунчера через GitHub Releases
 
-## Установщик: важно
+## Установщик и обновления
 
-**Сейчас Setup — «полный» установщик:** внутри него уже лежит лаунчер той версии, с которой Setup собран.
+**`ZLauncher.Setup.exe` — онлайн-stub:** при установке всегда качает последний `ZLauncher-Portable.zip` с GitHub (`releases/latest`).  
+Один Setup можно хранить долго — он ставит актуальную версию (нужен интернет).
 
-| Вопрос | Ответ |
-|--------|--------|
-| Можно один раз скачать Setup и всегда ставить «последнее»? | **Нет.** Старый Setup ставит ту версию, которая была в нём на момент сборки. |
-| Как поставить новую версию? | Скачать новый Setup (или Portable) с [latest release](https://github.com/exteriya1337/ZLauncher/releases/latest), либо обновиться **из уже установленного лаунчера** (проверка GitHub при запуске). |
-| Лаунчер сам обновляется? | Да: при старте смотрит `releases/latest` и может скачать новый Setup. |
-
-Если понадобится **вечный Setup-stub** (маленький файл, который всегда качает latest с GitHub) — это отдельная доработка.
+**Принудительное обновление лаунчера:** при каждом запуске (splash) сверка с GitHub.  
+Если на GitHub версия новее — скачивается Portable, файлы заменяются, лаунчер перезапускается.  
+Без сети — запуск продолжается без обновления.
 
 ## Структура репозитория
 
@@ -51,18 +48,11 @@ docs/               — лендинг (GitHub Pages)
 # Лаунчер (portable)
 dotnet publish ZLauncher.csproj -c Release -r win-x64 --self-contained true -o .\publish\portable
 
-# Установщик (упаковать portable внутрь + single-file Setup)
+# Онлайн Setup-stub (без вшитого payload)
 .\Installer\tools\Publish-Setup.ps1
 ```
 
-Релиз: обновить `Version` в `Services/AppInfo.cs` и `Directory.Build.props`, затем:
-
-```powershell
-git tag v1.0.2
-git push origin v1.0.2
-```
-
-CI соберёт `ZLauncher.Setup.exe` и `ZLauncher-Portable.zip`.
+Релиз: portable + online Setup в assets. Тег `v*`, CI или ручная заливка.
 
 ## Лицензия / дисклеймер
 
