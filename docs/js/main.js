@@ -655,10 +655,39 @@ async function refreshChangelogInBackground() {
   }
 }
 
+/** Анимация появления блоков при скролле вниз */
+function wireScrollReveal() {
+  const nodes = document.querySelectorAll(".reveal");
+  if (!nodes.length) return;
+
+  if (reduceMotion || typeof IntersectionObserver === "undefined") {
+    nodes.forEach((el) => el.classList.add("is-visible"));
+    return;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        io.unobserve(entry.target);
+      });
+    },
+    {
+      root: null,
+      rootMargin: "0px 0px -8% 0px",
+      threshold: 0.12,
+    }
+  );
+
+  nodes.forEach((el) => io.observe(el));
+}
+
 async function boot() {
   wireDownload();
   wireTabs();
   startEntrance();
+  wireScrollReveal();
 
   const cachedV = readLocal(LS_VISITS, 0);
   const cachedD = readLocal(LS_DOWNLOADS, 0);

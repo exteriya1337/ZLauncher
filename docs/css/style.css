@@ -51,6 +51,60 @@ body {
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #e67e22 #1a1a1a;
+}
+
+/* ── Custom scrollbar (Chrome / Edge / Safari) ── */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #e67e22 #1a1a1a;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: #141414;
+  border-left: 1px solid #222;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #f08a30 0%, #e67e22 50%, #cf6d16 100%);
+  border-radius: 8px;
+  border: 2px solid #141414;
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff9a40 0%, #f08a30 50%, #e67e22 100%);
+  border: 2px solid #141414;
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active,
+*::-webkit-scrollbar-thumb:active {
+  background: #cf6d16;
+  border: 2px solid #141414;
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+  background: #141414;
 }
 
 /* Текст / картинки — без I-beam и без смены курсора */
@@ -329,9 +383,8 @@ body.is-ready .anim-window {
 /* ── Hero ── */
 .hero {
   min-height: calc(100vh - 56px);
-  display: flex;
-  align-items: center;
-  padding: 2.5rem 0;
+  display: block;
+  padding: 2.5rem 0 4rem;
 }
 
 .hero-grid {
@@ -339,6 +392,7 @@ body.is-ready .anim-window {
   grid-template-columns: 1fr 1.1fr;
   gap: 3rem;
   align-items: center;
+  min-height: calc(100vh - 56px - 5rem);
 }
 
 .brand-row {
@@ -371,10 +425,19 @@ body.is-ready .anim-window {
 }
 
 .hero-lead {
-  margin: 0 0 1.75rem;
-  max-width: 38ch;
-  color: #b8b8b8;
+  margin: 0 0 0.65rem;
+  max-width: 40ch;
+  color: #c8c8c8;
   font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.hero-disclaimer {
+  margin: 0 0 1.5rem;
+  max-width: 42ch;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
 }
 
 .hero-actions {
@@ -813,6 +876,221 @@ a.btn-github:active {
     url("../assets/home-bg.jpg") center / cover no-repeat;
 }
 
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: calc(var(--r, 0) * 90ms);
+  will-change: opacity, transform;
+}
+
+.reveal.reveal-left {
+  transform: translateX(-36px) translateY(12px);
+}
+
+.reveal.reveal-right {
+  transform: translateX(36px) translateY(12px);
+}
+
+.reveal.reveal-up {
+  transform: translateY(18px);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Feature row: mods preview + text ── */
+.feature-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.95fr;
+  gap: 2.75rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.feature-copy {
+  max-width: 38ch;
+}
+
+.feature-title {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-bright);
+  line-height: 1.25;
+}
+
+.feature-text {
+  margin: 0 0 0.85rem;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #b0b0b0;
+}
+
+.feature-list {
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.feature-list li {
+  position: relative;
+  padding-left: 1.35rem;
+  font-size: 13.5px;
+  color: #c8c8c8;
+}
+
+.feature-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.window-shell--mods .window {
+  transform: rotateY(3deg) rotateX(2deg);
+}
+
+.mods-art {
+  position: relative;
+  flex: 1;
+  min-height: 280px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(18, 18, 18, 0.25) 0%, rgba(18, 18, 18, 0.82) 100%),
+    url("../assets/mods-bg.jpg") center / cover no-repeat;
+}
+
+.mods-ui {
+  position: relative;
+  z-index: 1;
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 280px;
+}
+
+.mods-search {
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: rgba(42, 42, 42, 0.92);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.mods-search-placeholder {
+  font-size: 12px;
+  color: #777;
+}
+
+.mod-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mod-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(34, 34, 34, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mod-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+  flex-shrink: 0;
+}
+
+.mod-card-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  justify-content: center;
+}
+
+/* Полоски-заглушки «как текст» */
+.mod-skel {
+  display: block;
+  height: 9px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    #3a3a3a 0%,
+    #4a4a4a 45%,
+    #3a3a3a 100%
+  );
+  background-size: 200% 100%;
+}
+
+.mod-skel-title {
+  width: 58%;
+  height: 11px;
+}
+
+.mod-skel-desc {
+  width: 78%;
+  height: 8px;
+  opacity: 0.75;
+}
+
+.mod-skel-mid {
+  width: 48%;
+}
+
+.mod-skel-long {
+  width: 66%;
+}
+
+.mod-skel-short {
+  width: 55%;
+}
+
+.mod-card-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #333;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
 .home-overlay {
   position: absolute;
   inset: 0;
@@ -1196,6 +1474,38 @@ a.btn-github:active {
 
   .hero-actions {
     justify-content: center;
+  }
+
+  .feature-row {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-top: 2.5rem;
+  }
+
+  .feature-copy {
+    max-width: none;
+    text-align: center;
+  }
+
+  .feature-list {
+    align-items: center;
+  }
+
+  .feature-list li {
+    text-align: left;
+  }
+
+  .window-shell--mods .window {
+    transform: none;
+  }
+
+  /* на мобиле: сначала текст, потом превью модов */
+  .feature-row .feature-copy {
+    order: 1;
+  }
+
+  .feature-row .window-shell--mods {
+    order: 2;
   }
 }
 

@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.github.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=6" />
+  <link rel="stylesheet" href="css/style.css?v=12" />
 </head>
 <body class="is-loading">
   <div class="page-bg" aria-hidden="true">
@@ -52,8 +52,11 @@
         </h1>
 
         <p class="hero-lead anim-item" style="--i: 2">
-          ZLauncher не связан с Mojang Studios, Microsoft и не является
-          официальным продуктом. Minecraft — товарный знак Mojang Synergies AB.
+          Удобный лаунчер Minecraft: выбирай версию, ставь моды с Modrinth,
+          ресурспаки и шейдеры — и сразу жми «Играть».
+        </p>
+        <p class="hero-disclaimer anim-item" style="--i: 2">
+          Не связан с Mojang / Microsoft. Minecraft — товарный знак Mojang Synergies AB.
         </p>
 
         <div class="hero-actions anim-item" style="--i: 3">
@@ -183,6 +186,131 @@
         </div>
       </div>
     </div>
+
+    <!-- Второй блок: превью МОДЫ + описание -->
+    <div class="container feature-row">
+      <div class="window-shell window-shell--mods reveal reveal-left" aria-hidden="true">
+        <div class="window-shadow">
+          <div class="window">
+            <div class="titlebar">
+              <div class="titlebar-left">
+                <span class="titlebar-brand"><span class="brand-z">Z</span><span class="brand-rest">Launcher</span></span>
+                <span class="titlebar-status">Modrinth · Fabric 1.21.4</span>
+              </div>
+              <div class="titlebar-controls">
+                <span class="cap-btn">−</span>
+                <span class="cap-btn">×</span>
+              </div>
+            </div>
+            <div class="window-body">
+              <aside class="sidebar">
+                <div class="sidebar-head">
+                  <span>ВЕРСИИ</span>
+                </div>
+                <ul class="version-list">
+                  <li class="ver selected">
+                    <span class="chev">▾</span>
+                    <span class="ver-name">1.21.4</span>
+                    <span class="ver-check">✓</span>
+                  </li>
+                  <li class="ver sub">Vanilla</li>
+                  <li class="ver sub selected-sub">Fabric</li>
+                  <li class="ver sub">Forge</li>
+                  <li class="ver">
+                    <span class="chev">▸</span>
+                    <span class="ver-name">1.21.1</span>
+                    <span class="ver-check">✓</span>
+                  </li>
+                  <li class="ver">
+                    <span class="chev">▸</span>
+                    <span class="ver-name">1.20.1</span>
+                    <span class="ver-check">✓</span>
+                  </li>
+                  <li class="ver">
+                    <span class="chev">▸</span>
+                    <span class="ver-name">1.19.4</span>
+                  </li>
+                  <li class="ver">
+                    <span class="chev">▸</span>
+                    <span class="ver-name">1.18.2</span>
+                  </li>
+                  <li class="ver">
+                    <span class="chev">▸</span>
+                    <span class="ver-name">1.16.5</span>
+                  </li>
+                  <li class="ver muted">
+                    <span class="chev">▸</span>
+                    <span class="ver-name">1.12.2</span>
+                  </li>
+                </ul>
+              </aside>
+              <div class="content-pane">
+                <div class="tabs">
+                  <span class="tab">ГЛАВНАЯ</span>
+                  <span class="tab">ВЕРСИИ</span>
+                  <span class="tab active">МОДЫ</span>
+                  <span class="tab">РЕСУРСЫ</span>
+                  <span class="tab">ШЕЙДЕРЫ</span>
+                </div>
+                <div class="mods-art">
+                  <div class="home-overlay"></div>
+                  <div class="mods-ui">
+                    <div class="mods-search">
+                      <span class="mods-search-placeholder">Поиск модов на Modrinth…</span>
+                    </div>
+                    <div class="mod-cards">
+                      <div class="mod-card">
+                        <div class="mod-card-icon"></div>
+                        <div class="mod-card-text">
+                          <span class="mod-skel mod-skel-title"></span>
+                          <span class="mod-skel mod-skel-desc"></span>
+                        </div>
+                        <span class="mod-card-btn">+</span>
+                      </div>
+                      <div class="mod-card">
+                        <div class="mod-card-icon"></div>
+                        <div class="mod-card-text">
+                          <span class="mod-skel mod-skel-title mod-skel-mid"></span>
+                          <span class="mod-skel mod-skel-desc mod-skel-short"></span>
+                        </div>
+                        <span class="mod-card-btn">+</span>
+                      </div>
+                      <div class="mod-card">
+                        <div class="mod-card-icon"></div>
+                        <div class="mod-card-text">
+                          <span class="mod-skel mod-skel-title mod-skel-long"></span>
+                          <span class="mod-skel mod-skel-desc"></span>
+                        </div>
+                        <span class="mod-card-btn">+</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-copy reveal reveal-right">
+        <p class="eyebrow">Моды без браузера</p>
+        <h2 class="feature-title">Ищи и ставь моды прямо в лаунчере</h2>
+        <p class="feature-text">
+          Открыл вкладку «Моды» — и ты уже на Modrinth. Набрал название,
+          посмотрел карточку, нажал установку. Не нужно вручную таскать jar-ы
+          по папкам и гадать, под какую версию файл.
+        </p>
+        <p class="feature-text">
+          Лаунчер подставляет твою версию Minecraft и тип сборки (Fabric, Forge
+          и другие), чтобы результаты поиска были по делу.
+        </p>
+        <ul class="feature-list">
+          <li class="reveal reveal-up" style="--r: 0">Поиск и установка с Modrinth</li>
+          <li class="reveal reveal-up" style="--r: 1">Учёт версии игры и лоадера</li>
+          <li class="reveal reveal-up" style="--r: 2">То же для ресурспаков и шейдеров</li>
+        </ul>
+      </div>
+    </div>
   </main>
 
   <!-- ─── Changelog (с GitHub Releases) ─── -->
@@ -211,6 +339,6 @@
     </div>
   </section>
 
-  <script src="js/main.js?v=6"></script>
+  <script src="js/main.js?v=12"></script>
 </body>
 </html>
