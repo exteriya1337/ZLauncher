@@ -863,6 +863,24 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Открыть сайт ZLauncher в браузере.</summary>
+    [RelayCommand]
+    private void OpenWebsite()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = AppInfo.WebsiteUrl,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Не удалось открыть сайт:\n{ex.Message}";
+        }
+    }
+
     /// <summary>Контекст установки мода: MC-версия + лоадер выбранной сборки.</summary>
     private (string? gameVersion, string? loader) ResolveModInstallContext()
     {

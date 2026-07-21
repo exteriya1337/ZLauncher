@@ -10,7 +10,7 @@
     <RootNamespace>ZLauncher.Installer</RootNamespace>
     <Product>ZLauncher Installer</Product>
     <Company>ZLauncher</Company>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Description>Установщик ZLauncher</Description>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

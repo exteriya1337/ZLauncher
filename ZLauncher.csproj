@@ -40,8 +40,8 @@
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
   </ItemGroup>
 
-  <!-- Обновляет ярлык на рабочем столе после каждой успешной сборки -->
-  <Target Name="UpdateDesktopShortcut" AfterTargets="Build">
+  <!-- Ярлык на рабочем столе: отключить /p:SkipDesktopShortcut=true -->
+  <Target Name="UpdateDesktopShortcut" AfterTargets="Build" Condition="'$(SkipDesktopShortcut)' != 'true'">
     <PropertyGroup>
       <_ShortcutScript>$(MSBuildProjectDirectory)\tools\UpdateDesktopShortcut.ps1</_ShortcutScript>
       <_ShortcutTarget>$(TargetDir)$(AssemblyName).exe</_ShortcutTarget>

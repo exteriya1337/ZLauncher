@@ -1410,6 +1410,16 @@
                             </Border.Background>
                         </Border>
 
+                        <!-- Кнопка на сайт (слева сверху) -->
+                        <Button HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Margin="20,56,0,0"
+                                Classes="ContentTab"
+                                Content="САЙТ"
+                                Command="{Binding OpenWebsiteCommand}"
+                                ToolTip.Tip="Открыть сайт ZLauncher"
+                                ZIndex="1" />
+
                         <!-- Новость справа (над кнопкой «Установить») -->
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Top"

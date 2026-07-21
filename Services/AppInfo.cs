@@ -7,12 +7,15 @@ namespace ZLauncher.Services;
 public static class AppInfo
 {
     /// <summary>Семантическая версия лаунчера (совпадает с AssemblyVersion / git tag без v).</summary>
-    public const string Version = "1.0.2";
+    public const string Version = "1.0.3";
 
     public const string ProductName = "ZLauncher";
 
     public const string GitHubOwner = "exteriya1337";
     public const string GitHubRepo = "ZLauncher";
+
+    /// <summary>Лендинг (GitHub Pages).</summary>
+    public const string WebsiteUrl = "https://exteriya1337.github.io/ZLauncher/";
 
     public static string ReleasesApiUrl =>
         $"https://api.github.com/repos/{GitHubOwner}/{GitHubRepo}/releases/latest";
