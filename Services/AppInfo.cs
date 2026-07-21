@@ -7,7 +7,7 @@ namespace ZLauncher.Services;
 public static class AppInfo
 {
     /// <summary>Семантическая версия лаунчера (совпадает с AssemblyVersion / git tag без v).</summary>
-    public const string Version = "1.0.0";
+    public const string Version = "1.0.1";
 
     public const string ProductName = "ZLauncher";
 
