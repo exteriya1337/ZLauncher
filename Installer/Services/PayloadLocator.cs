@@ -97,15 +97,18 @@ public static class PayloadLocator
         }
 
         // Dev: payload рядом с исходниками (когда BaseDirectory = bin\...)
+        string? dev = null;
         try
         {
-            var dev = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "payload", ZipFileName));
-            yield return dev;
+            dev = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "payload", ZipFileName));
         }
         catch
         {
             // ignore
         }
+
+        if (!string.IsNullOrEmpty(dev))
+            yield return dev;
     }
 
     private static IEnumerable<string> GetDirectoryCandidates(string baseDir)

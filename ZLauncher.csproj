@@ -18,6 +18,15 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
+  <!-- Monorepo: installer is a separate project -->
+  <ItemGroup>
+    <Compile Remove="Installer\**" />
+    <None Remove="Installer\**" />
+    <EmbeddedResource Remove="Installer\**" />
+    <AvaloniaResource Remove="Installer\**" />
+    <AvaloniaXaml Remove="Installer\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.0" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
