@@ -264,34 +264,156 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-/** Простой markdown → HTML (заголовки, bold, code, ссылки, списки) */
-function simpleMarkdown(md) {
-  if (!md || !md.trim()) return "";
-
-  let text = escapeHtml(md);
-
+/** Inline markdown (после escapeHtml) */
+function applyInlineMd(text) {
   // links [text](url)
   text = text.replace(
     /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
-  // bare urls
+  // bare urls (не внутри уже созданных href)
   text = text.replace(
-    /(^|[\s(])(https?:\/\/[^\s<]+)/g,
+    /(^|[\s(>])(https?:\/\/[^\s<]+)/g,
     '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>'
   );
   // **bold**
   text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   // `code`
   text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
-  // headings at line start
-  text = text.replace(/^### (.+)$/gm, "<strong>$1</strong>");
-  text = text.replace(/^## (.+)$/gm, "<strong>$1</strong>");
-  text = text.replace(/^# (.+)$/gm, "<strong>$1</strong>");
-  // list bullets
-  text = text.replace(/^[-*] (.+)$/gm, "• $1");
-
   return text;
+}
+
+function applyLineMd(line) {
+  let t = line;
+  t = t.replace(/^### (.+)$/, "<strong>$1</strong>");
+  t = t.replace(/^## (.+)$/, "<strong>$1</strong>");
+  t = t.replace(/^# (.+)$/, "<strong>$1</strong>");
+  t = t.replace(/^[-*] (.+)$/, "• $1");
+  return t;
+}
+
+function isTableRowLine(line) {
+  const t = line.trim();
+  if (!t.includes("|")) return false;
+  // хотя бы одна ячейка между |
+  return /^\|?.+\|.+\|?$/.test(t);
+}
+
+function isTableSeparatorLine(line) {
+  const t = line.trim();
+  // | --- | :---: | ---: |
+  if (!t.includes("|") || !t.includes("-")) return false;
+  const cells = t
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((c) => c.trim());
+  if (cells.length < 1) return false;
+  return cells.every((c) => /^:?-{1,}:?$/.test(c));
+}
+
+function parseTableAlign(sepLine) {
+  return sepLine
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((c) => {
+      const s = c.trim();
+      const left = s.startsWith(":");
+      const right = s.endsWith(":");
+      if (left && right) return "center";
+      if (right) return "right";
+      return "left";
+    });
+}
+
+function splitTableCells(line) {
+  let t = line.trim();
+  if (t.startsWith("|")) t = t.slice(1);
+  if (t.endsWith("|")) t = t.slice(0, -1);
+  return t.split("|").map((c) => c.trim());
+}
+
+function looksLikeTableStart(lines, i) {
+  if (i + 1 >= lines.length) return false;
+  return isTableRowLine(lines[i]) && isTableSeparatorLine(lines[i + 1]);
+}
+
+function parseMarkdownTable(lines, start) {
+  const headerCells = splitTableCells(lines[start]);
+  const aligns = parseTableAlign(lines[start + 1]);
+  const rows = [];
+  let i = start + 2;
+  while (i < lines.length && isTableRowLine(lines[i]) && !isTableSeparatorLine(lines[i])) {
+    rows.push(splitTableCells(lines[i]));
+    i++;
+  }
+
+  const alignFor = (idx) => aligns[idx] || "left";
+
+  let html = '<div class="cl-table-wrap"><table class="cl-table"><thead><tr>';
+  headerCells.forEach((cell, idx) => {
+    html += `<th style="text-align:${alignFor(idx)}">${applyInlineMd(escapeHtml(cell))}</th>`;
+  });
+  html += "</tr></thead><tbody>";
+
+  rows.forEach((row) => {
+    html += "<tr>";
+    // выровнять число ячеек под заголовок
+    for (let c = 0; c < headerCells.length; c++) {
+      const cell = row[c] != null ? row[c] : "";
+      html += `<td style="text-align:${alignFor(c)}">${applyInlineMd(escapeHtml(cell))}</td>`;
+    }
+    html += "</tr>";
+  });
+
+  html += "</tbody></table></div>";
+  return { html, next: i };
+}
+
+/**
+ * Markdown → HTML: таблицы GFM, заголовки, bold, code, ссылки, списки.
+ */
+function simpleMarkdown(md) {
+  if (!md || !md.trim()) return "";
+
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const parts = [];
+  let textBuf = [];
+  let i = 0;
+
+  function flushText() {
+    if (!textBuf.length) return;
+    const chunk = textBuf.join("\n");
+    textBuf = [];
+    if (!chunk.trim()) {
+      parts.push("<br>");
+      return;
+    }
+    let t = escapeHtml(chunk);
+    t = applyInlineMd(t);
+    t = t
+      .split("\n")
+      .map((line) => applyLineMd(line))
+      .join("<br>\n");
+    parts.push(`<div class="cl-md">${t}</div>`);
+  }
+
+  while (i < lines.length) {
+    if (looksLikeTableStart(lines, i)) {
+      flushText();
+      const { html, next } = parseMarkdownTable(lines, i);
+      parts.push(html);
+      i = next;
+      continue;
+    }
+    textBuf.push(lines[i]);
+    i++;
+  }
+  flushText();
+
+  return parts.join("\n");
 }
 
 function formatReleaseDate(iso) {

@@ -992,7 +992,7 @@ a.btn-github:active {
   font-size: 13.5px;
   line-height: 1.55;
   color: #c4c4c4;
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
 }
 
@@ -1000,6 +1000,14 @@ a.btn-github:active {
   content: "Без описания.";
   color: var(--text-dim);
   font-style: italic;
+}
+
+.cl-md {
+  margin: 0 0 0.65rem;
+}
+
+.cl-md:last-child {
+  margin-bottom: 0;
 }
 
 .cl-body a {
@@ -1020,6 +1028,63 @@ a.btn-github:active {
   padding: 0.1em 0.35em;
   border-radius: 4px;
   border: 1px solid var(--border);
+}
+
+/* GFM tables in release notes */
+.cl-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 0.85rem 0 1rem;
+  border-radius: 10px;
+  border: 1px solid #3a3a3a;
+  background: #1f1f1f;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cl-table {
+  width: 100%;
+  min-width: 280px;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.cl-table th,
+.cl-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #333;
+  border-right: 1px solid #2e2e2e;
+  vertical-align: top;
+}
+
+.cl-table th:last-child,
+.cl-table td:last-child {
+  border-right: none;
+}
+
+.cl-table thead th {
+  background: #2a2a2a;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cl-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.cl-table tbody tr:hover td {
+  background: rgba(230, 126, 34, 0.06);
+}
+
+.cl-table td {
+  color: #d0d0d0;
 }
 
 .cl-link {
