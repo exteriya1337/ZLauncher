@@ -1,65 +1,69 @@
-﻿# ZLauncher
+# ZLauncher
 
-Minecraft-Р»Р°СѓРЅС‡РµСЂ (Avalonia) + СѓСЃС‚Р°РЅРѕРІС‰РёРє + СЃР°Р№С‚.
+Неофициальный **лаунчер Minecraft** для Windows: версии, моды (Modrinth), ресурспаки, шейдеры, быстрый запуск.
 
-**РќРµ СЃРІСЏР·Р°РЅ СЃ Mojang Studios / Microsoft.** Minecraft вЂ” С‚РѕРІР°СЂРЅС‹Р№ Р·РЅР°Рє Mojang Synergies AB.
+> **Не связан с Mojang Studios и Microsoft.**  
+> Minecraft — товарный знак Mojang Synergies AB.
 
-## Р РµРїРѕР·РёС‚РѕСЂРёР№
+## Скачать
 
-| РџСѓС‚СЊ | РЎРѕРґРµСЂР¶РёРјРѕРµ |
-|------|------------|
-| `/` | Р›Р°СѓРЅС‡РµСЂ `ZLauncher` |
-| `Installer/` | РЈСЃС‚Р°РЅРѕРІС‰РёРє `ZLauncher.Setup` |
-| `docs/` | Р›РµРЅРґРёРЅРі (GitHub Pages) |
-| `.github/workflows/release.yml` | РЎР±РѕСЂРєР° portable + setup РІ Release |
+| Файл | Для чего |
+|------|----------|
+| [**ZLauncher.Setup.exe**](https://github.com/exteriya1337/ZLauncher/releases/latest/download/ZLauncher.Setup.exe) | Установщик (рекомендуется) |
+| [**ZLauncher-Portable.zip**](https://github.com/exteriya1337/ZLauncher/releases/latest/download/ZLauncher-Portable.zip) | Portable, без установки |
 
-- **Owner / repo:** `exteriya1337/ZLauncher`
-- **Р РµР»РёР·С‹:** https://github.com/exteriya1337/ZLauncher/releases
-- **РЎР°Р№С‚ (Pages):** РІРєР»СЋС‡Рё РІ Settings в†’ Pages в†’ branch `main` / folder `/docs`
+Все версии: [Releases](https://github.com/exteriya1337/ZLauncher/releases)  
+Сайт: https://exteriya1337.github.io/ZLauncher/
 
-## Р’РµСЂСЃРёСЏ
+## Что умеет
 
-Р•РґРёРЅР°СЏ РІРµСЂСЃРёСЏ: `Directory.Build.props` + `Services/AppInfo.cs` (`Version = "1.0.0"`).
+- Список версий Mojang (релизы, снапшоты, beta/alpha)
+- Vanilla / Fabric / Quilt / Forge / NeoForge / OptiFine
+- **Кастомные версии** — положи папку в `%AppData%\ZLauncher\versions\`
+- Моды, ресурспаки и шейдеры с Modrinth
+- Обычные аккаунты (офлайн-ник)
+- Проверка обновлений лаунчера через GitHub Releases
 
-РџСЂРё СЂРµР»РёР·Рµ:
+## Установщик: важно
 
-1. РћР±РЅРѕРІРё `Version` РІ `AppInfo.cs` (Р»Р°СѓРЅС‡РµСЂ) Рё `Installer/Services/AppInfo.cs`
-2. РћР±РЅРѕРІРё `Directory.Build.props`
-3. РўРµРі: `git tag v1.0.1 && git push origin v1.0.1`
-4. CI СЃРѕР±РµСЂС‘С‚ `ZLauncher-Portable.zip` Рё `ZLauncher.Setup.exe`
+**Сейчас Setup — «полный» установщик:** внутри него уже лежит лаунчер той версии, с которой Setup собран.
 
-## Р›РѕРєР°Р»СЊРЅР°СЏ СЃР±РѕСЂРєР°
+| Вопрос | Ответ |
+|--------|--------|
+| Можно один раз скачать Setup и всегда ставить «последнее»? | **Нет.** Старый Setup ставит ту версию, которая была в нём на момент сборки. |
+| Как поставить новую версию? | Скачать новый Setup (или Portable) с [latest release](https://github.com/exteriya1337/ZLauncher/releases/latest), либо обновиться **из уже установленного лаунчера** (проверка GitHub при запуске). |
+| Лаунчер сам обновляется? | Да: при старте смотрит `releases/latest` и может скачать новый Setup. |
 
-```powershell
-# Р›Р°СѓРЅС‡РµСЂ
-dotnet build ZLauncher.csproj -c Release
+Если понадобится **вечный Setup-stub** (маленький файл, который всегда качает latest с GitHub) — это отдельная доработка.
 
-# Portable
-dotnet publish ZLauncher.csproj -c Release -r win-x64 --self-contained true -o .\publish\portable
+## Структура репозитория
 
-# Payload + Setup
-$zip = ".\Installer\payload\payload.zip"
-Compress-Archive -Path .\publish\portable\* -DestinationPath $zip -Force
-dotnet publish .\Installer\ZLauncher.Installer.csproj -c Release -r win-x64 --self-contained true `
-  /p:PublishSingleFile=true -o .\publish\setup
+```
+ZLauncher/          — исходники лаунчера (Avalonia)
+Installer/          — исходники установщика
+docs/               — лендинг (GitHub Pages)
+.github/workflows/  — сборка релиза по тегу v*
 ```
 
-РР»Рё: `Installer\tools\Publish-Setup.ps1` (РµСЃР»Рё СЂСЏРґРѕРј РµСЃС‚СЊ `Desktop\ZLauncher-Portable`).
+## Сборка (для разработчиков)
 
-## РћР±РЅРѕРІР»РµРЅРёСЏ
+```powershell
+# Лаунчер (portable)
+dotnet publish ZLauncher.csproj -c Release -r win-x64 --self-contained true -o .\publish\portable
 
-РџСЂРё СЃС‚Р°СЂС‚Рµ Р»Р°СѓРЅС‡РµСЂ РґРµСЂРіР°РµС‚ GitHub API `releases/latest` Рё СЃСЂР°РІРЅРёРІР°РµС‚ СЃ `AppInfo.Version`.  
-Р•СЃР»Рё РµСЃС‚СЊ РЅРѕРІРµРµ вЂ” СЃС‚Р°С‚СѓСЃ В«Р”РѕСЃС‚СѓРїРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµвЂ¦В»; РєРѕРјР°РЅРґР° `ApplyLauncherUpdate` РєР°С‡Р°РµС‚ `ZLauncher.Setup.exe` Рё Р·Р°РїСѓСЃРєР°РµС‚.
+# Установщик (упаковать portable внутрь + single-file Setup)
+.\Installer\tools\Publish-Setup.ps1
+```
 
-## РљР°СЃС‚РѕРјРЅС‹Рµ РІРµСЂСЃРёРё
+Релиз: обновить `Version` в `Services/AppInfo.cs` и `Directory.Build.props`, затем:
 
-РџРѕР»РѕР¶Рё РїР°РїРєСѓ СЃ profile `.json` (+ jar) РІ:
+```powershell
+git tag v1.0.2
+git push origin v1.0.2
+```
 
-`%AppData%\ZLauncher\versions\MyClient\`
+CI соберёт `ZLauncher.Setup.exe` и `ZLauncher-Portable.zip`.
 
-РћРЅР° РїРѕСЏРІРёС‚СЃСЏ РІ СЃРїРёСЃРєРµ РІРµСЂСЃРёР№ (С‚РёРї **custom**), СЃРІРµСЂС…Сѓ. Debug-РєРѕРЅСЃРѕР»СЊ вЂ” **3Г— РєР»РёРє** РїРѕ В«ZLauncherВ» РІ titlebar (Р±РµР· РїРѕРґСЃРєР°Р·РєРё).
+## Лицензия / дисклеймер
 
-## Р›РёС†РµРЅР·РёСЏ / РґРёСЃРєР»РµР№РјРµСЂ
-
-РќРµРѕС„РёС†РёР°Р»СЊРЅС‹Р№ РєР»РёРµРЅС‚. РќРµ Р°С„С„РёР»РёСЂРѕРІР°РЅ СЃ Mojang / Microsoft.
-
+Неофициальный проект. Не аффилирован с Mojang, Microsoft или Minecraft.
