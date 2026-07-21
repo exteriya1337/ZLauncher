@@ -28,6 +28,7 @@ project.fragment.lock.json
 artifacts/
 publish/
 out/
+Installer/payload/payload.zip
 
 ## Installer payload (generated)
 Installer/payload/payload.zip
