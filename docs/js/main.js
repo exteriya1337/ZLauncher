@@ -211,35 +211,106 @@ const CHANGELOG_TTL_MS = 30 * 60 * 1000; // 30 мин — экономим rate 
 
 let changelogLoaded = false;
 let changelogLoading = false;
+let currentSiteTab = "home";
+let tabAnimating = false;
 
-function setActiveTab(tab) {
-  const tabs = document.querySelectorAll(".site-tab");
-  const panels = document.querySelectorAll(".site-panel");
+const TAB_OUT_MS = 240;
+const TAB_IN_MS = 340;
 
-  tabs.forEach((t) => {
+function waitMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function updateTabButtons(tab) {
+  document.querySelectorAll(".site-tab").forEach((t) => {
     const on = t.getAttribute("data-tab") === tab;
     t.classList.toggle("is-active", on);
     t.setAttribute("aria-selected", on ? "true" : "false");
   });
+}
 
-  panels.forEach((p) => {
-    const on = p.getAttribute("data-panel") === tab;
-    p.classList.toggle("is-active", on);
-    if (on) p.removeAttribute("hidden");
-    else p.setAttribute("hidden", "");
-  });
-
+function updateTabHash(tab) {
   if (tab === "changelog") {
-    loadChangelog();
-    // hash for shareable link
     if (location.hash !== "#changelog") {
       history.replaceState(null, "", "#changelog");
     }
   } else if (location.hash === "#changelog" || location.hash === "#home") {
-    history.replaceState(null, "", tab === "home" ? "#home" : location.pathname);
+    history.replaceState(null, "", "#home");
+  }
+}
+
+function switchPanelsInstant(from, to) {
+  if (from && from !== to) {
+    from.classList.remove("is-active", "is-exit", "is-enter");
+    from.setAttribute("hidden", "");
+    from.style.removeProperty("--tab-dir");
+  }
+  if (to) {
+    to.removeAttribute("hidden");
+    to.classList.remove("is-exit", "is-enter");
+    to.classList.add("is-active");
+    to.style.removeProperty("--tab-dir");
+  }
+}
+
+async function setActiveTab(tab, { force = false } = {}) {
+  if (!tab) return;
+  if (!force && (tab === currentSiteTab || tabAnimating)) return;
+
+  const to = document.querySelector(`.site-panel[data-panel="${tab}"]`);
+  if (!to) return;
+
+  const from = document.querySelector(".site-panel.is-active");
+  // направление: changelog правее, home левее
+  const dir = tab === "changelog" ? 1 : -1;
+
+  updateTabButtons(tab);
+
+  if (reduceMotion || !from || from === to) {
+    switchPanelsInstant(from, to);
+    currentSiteTab = tab;
+    updateTabHash(tab);
+    if (tab === "changelog") loadChangelog();
+    window.scrollTo({ top: 0, behavior: "auto" });
+    return;
   }
 
-  window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  tabAnimating = true;
+
+  // 1) уход текущей панели
+  from.style.setProperty("--tab-dir", String(dir));
+  from.classList.add("is-exit");
+  from.classList.remove("is-active");
+
+  await waitMs(TAB_OUT_MS);
+
+  from.setAttribute("hidden", "");
+  from.classList.remove("is-exit");
+  from.style.removeProperty("--tab-dir");
+
+  // 2) появление новой
+  to.style.setProperty("--tab-dir", String(dir));
+  to.removeAttribute("hidden");
+  to.classList.add("is-enter");
+  // reflow, чтобы анимация стартовала
+  void to.offsetWidth;
+  to.classList.add("is-active");
+
+  await waitMs(TAB_IN_MS);
+
+  to.classList.remove("is-enter");
+  to.style.removeProperty("--tab-dir");
+
+  currentSiteTab = tab;
+  tabAnimating = false;
+  updateTabHash(tab);
+
+  if (tab === "changelog") loadChangelog();
+
+  window.scrollTo({
+    top: 0,
+    behavior: reduceMotion ? "auto" : "smooth",
+  });
 }
 
 function wireTabs() {
@@ -252,7 +323,10 @@ function wireTabs() {
   });
 
   if (location.hash === "#changelog") {
-    setActiveTab("changelog");
+    // без анимации на первом заходе по прямой ссылке
+    setActiveTab("changelog", { force: true });
+  } else {
+    currentSiteTab = "home";
   }
 }
 
