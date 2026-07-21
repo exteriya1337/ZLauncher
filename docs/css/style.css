@@ -74,6 +74,8 @@ a {
 /* Только интерактивные элементы — рука */
 a.btn-play,
 a.btn-play *,
+a.btn-github,
+a.btn-github *,
 button:not([disabled]),
 button:not([disabled]) * {
   cursor: pointer !important;
@@ -222,6 +224,10 @@ body.is-ready .anim-window {
 }
 
 .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 1.75rem;
 }
 
@@ -308,6 +314,46 @@ body.is-ready .anim-window {
 
 .btn-play:active .btn-play-fill {
   filter: brightness(0.95);
+}
+
+/* GitHub next to download */
+.btn-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    transform 0.2s var(--ease-out);
+}
+
+.btn-github-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+.btn-github:hover {
+  border-color: #8b949e;
+  color: #fff;
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.btn-github:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* Stats */
